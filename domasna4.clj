@@ -1,16 +1,16 @@
 ;; 1.0
 (defn atomic?
-  "check if `v` is atomic
-  use the clojure predicate coll? to check if `v` is collection
-  if it is collection then it is not atomic returns `false`
-  and if it is not collection than it is atomic returns `true`"
+  "return true if `v` is atomic
+  uses the clojure predicate `coll?` to check if `v` is collection
+  if it is collection then it is not atomic therefore returns `false`
+  and if it is not collection than it is atomic therefore returns `true`"
   [v]
   (not (coll?  v)))
 
 
 ;; 1.1
 (defn member?
-  "check if `x` is member of `lst`
+  "return true if `x` is member of `lst`
 
   iterate `lst` recursively until:
     -element that is equal to `x` is found in this case return `true`
@@ -48,9 +48,9 @@
 
 ;; 1.4
 (defn zip
-  "return list of pairs when the 1st element in the pair comes from `lst1` and the 2nd from `lst2 accordingly`
+  "return list of pairs where the 1st element in the pair comes from `lst1` and the 2nd from `lst2 accordingly`
 
-  iterate `lst1` anf `lst2` simuntaneously until at least on of them is empty
+  iterate `lst1` and `lst2` simuntaneously until at least one of them is empty
   in each iteration add pair of element from 'lst1' and from 'lst2' in the result"
   [lst1 lst2]
   (cond
@@ -74,7 +74,7 @@
 
 
 ;; 1.6
-(defn my-merge [lst1 lst2]
+(defn my-merge
   "merge sorted lists `lst1` and `lst2` in a way that the result is also sorted list
 
   iterate `lst1` and `lst2` recursively  if the element from 'lst1' is bigger
@@ -82,6 +82,7 @@
   and vice versa if the element from `lst2` is bigger add the element from 'lst1' in the result
   and continue the iteration with `lst2` and rest of 'lst1'.
   when you reach the end in one of the lists add the other to the result"
+  [lst1 lst2]
   (cond
     (empty? lst1) lst2
     (empty? lst2) lst1
@@ -132,7 +133,7 @@
 (defn my-reverse
   "return `lst` reversed
 
-  first call my-reverse with additional argument `agg`=() that will have the role of aggregator
+  first call my-reverse with additional argument `agg`=() which will have the role of aggregator
   then iterate 'lst' and add each element in the aggregator when you iterate the whole list return `agr`"
   ([lst] (my-reverse lst ()))
   ([lst agr]
@@ -175,11 +176,11 @@
 (defn buzz
   "return `list-of-ints` but all numbers containing 7 or divisible by 7 are replaced with :buzz
 
-  uses the map function with custum made mapping function
+  uses the map function with custum mapping function
   the mapping fungtion return :buzz if the argument is divisible by 7 or contains 7
   return the argument unchanged otherwise
   to check if the argument contains 7, the argument is transformed in list of chars with `(seq (str %))`
-  then the truth is calculated using the function `some` with `(partial = \7)` as predicate"
+  then the truth is calculated using the function `some` with `(partial = 7)` as predicate"
   [list-of-ints]
   (map
     #(cond
@@ -191,14 +192,20 @@
 
 ;; 2.1
 (defn divisors-of
-  ""
+  "return list of divisors of `n`
 
+  uses  `filter` with #(= 0 (mod n %)) as filtering function (check if n is divisible by the argument)
+  and (range 2 n) as sequence (genereates all ints between 2 and n)"
   [n]
   (filter #(= 0 (mod n %)) (range 2 n)))
 
 
 ;; 2.2
-(defn longest [list-of-strings]
+(defn longest
+  "returns the longest string in 'list-of-strings'
+
+  uses `reduce` on `list-of-strings` with reducing function that returns the longer of two strings"
+  [list-of-strings]
   (reduce
     #(if (>= (count %1) (count %2))
        %1
@@ -208,14 +215,24 @@
 
 
 ;; 3.0
-(defn my-map [f lst]
+(defn my-map
+  "implementation of `map` function - applies function `f` on each element of `lst` and return the list of results
+
+  iterate `lst` calculate the result of `f` with the current element passed as argument and add it to the result "
+  [f lst]
   (cond
     (empty? lst) ()
     :else (cons (f (first lst))(my-map f (rest lst)))))
 
 
 ;; 3.1
-(defn my-filter [pred lst]
+(defn my-filter
+  "implementation of `filter` - return list of members of 'lst' for which the predicate `pred` returns `true`
+
+  iterate `lst` for each element check if `pred` returns `true`
+  if it does add them in the result
+  else skip them (don't add them in the result)"
+  [pred lst]
   (cond
     (empty? lst) ()
     (pred (first lst)) (cons (first lst)(my-filter pred (rest lst)))
@@ -224,6 +241,12 @@
 
 ;; 3.2
 (defn my-reduce
+  "implementation of `reduce` - returns 'value?' after calculating it by applying `f` on `value?` and every element in `lst`
+
+  if 2 arguments are passed calls  `my-reduce` with `f`, the first element of `lst` as `value?` and the rest of `lst`
+  if all 3 arguments are passed:
+  iterate 'lst' in each iteration calculate the new value of `value?` as `(f value? (first lst))`
+  when the iteration is over return `value?`"
   ([f lst] (my-reduce f (first lst) (rest lst)))
   ([f value? lst]
    (cond
@@ -232,7 +255,12 @@
 
 
 ;; 3.3
-(defn my-flat-map "documentation string" [f lst]
+(defn my-flat-map
+  "applies `f` on every element in `lst` and returns list of result with one level of parentheses removed
+
+  iterate `lst` calculate the result of `f` with the current element passed as argument
+  and add it to the result by using `append` function "
+  [f lst]
   (cond
     (empty? lst) ()
     :else (append (f (first lst)) (my-flat-map f (rest lst)))))
