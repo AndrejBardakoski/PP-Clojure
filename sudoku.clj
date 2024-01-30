@@ -205,10 +205,10 @@
   filter the sets in the `row` that the number apears in
   count the remaining set, if it is only 1 then use `map` to apply the rule and continue
   with the iteration"
-  ([row] (uvs-horizontal-row row 0))
+  ([row] (uvs-horizontal-row row 1))
   ([row i]
    (cond
-     (= i (count row)) row
+     (> i 9) row
      (= 1 (count (filter #(set-member? % i) row)))
        (uvs-horizontal-row
          (map
@@ -241,7 +241,7 @@
   removes the value from all other sets in the same column
 
   implementation:
-    transpose the matrix then apply `uvs-horizontal` then transpose back the matrix"
+    transponierte the matrix then apply `uvs-horizontal` then transponierte back the matrix"
   [matrix]
   (transpose (uvs-horizontal (transpose matrix))))
 
@@ -265,27 +265,139 @@
   (uvs-box(uvs-vertical (uvs-horizontal matrix))))
 
 
+
+;; ilegal-state?
+;; ilegal state horizontal
+(defn ilgl-sts-horizontal?
+  "ilegal state horizontal
+  returns true if a row in `matrix` has ilegal state
+  ie. if in `matrix` there is a row where
+  two or more sets has the same SINGLE value
+
+  implementation:
+  if filtered row with filter that returns only the sets that has single value
+  has bigger value then then the set from filtered row then there are duolicates
+  meaning the row is in ilegal state so return true"
+  [matrix]
+  (cond
+    (empty? matrix) false
+    (< (count (set (filter #(= 1 (count %)) (first matrix))))
+       (count (filter #(= 1 (count %)) (first matrix))))
+          true
+    :else (ilgl-sts-horizontal? (rest matrix))))
+
+
+
+;; ilegal state vertical
+(defn ilgl-sts-vertical?
+    "ilegal state? vertical
+  returns true if a column in `matrix` has ilegal state
+  ie. if in `matrix` there is a column where
+  two or more sets has the same SINGLE value
+
+implementation:
+    transponierte the matrix then apply `ilgl-sts-horizontal?`"
+  [matrix]
+  (ilgl-sts-horizontal? (transpose matrix)))
+
+;; ilegal state box
+(defn ilgl-sts-box?
+  "ilegal state? box
+  returns true if a box-3x3 field in `matrix` has ilegal state
+  ie. if in `matrix` there is a box where
+  two or more sets has the same SINGLE value
+
+  implementation:
+  box-transform the matrix then apply `ilgl-sts-horizontal?`"
+  [matrix]
+  (ilgl-sts-horizontal? (box-transform matrix)))
+
+(defn ilegal-state?
+    "ilegal state?
+  returns true if `matrix` has ilegal state
+  ie. if in `matrix` there is a row, column, box where
+  two or more sets has the same SINGLE value
+
+  implementation:
+  check if any row, column or box are in ilegal state separatly by appling the predicates:
+  `ilgl-sts-horizontal?` `ilgl-sts-vertical?` `ilgl-sts-box?`"
+  [matrix]
+  (or
+    (ilgl-sts-horizontal? matrix)
+    (ilgl-sts-vertical? matrix)
+    (ilgl-sts-box? matrix)
+    )
+  )
+
+
+;; guessing
+(defn find-guess-pos
+  "returns the postition in `matrix` of the first set that has more than 1 element
+  implementation:
+  using `for` maps every set in `matrix` to its position in matrix or `nil` if it has only 1 element
+  then filters the nil values and returns the first value"
+  [matrix]
+  (first
+    (filter
+      #(not(nil? %))
+      (for [i (range 9) j (range 9)]
+        (if (= 1 (count(nth (nth matrix i) j))) nil [i j])))))
+
+
+(defn guess
+  "depending on `mode` it eithder made a guess or remove a previos made guess
+  if the mode is `:make-guess` finds the first set in matrix
+  that has multiple values and sets it to the first value ie. makes a choise
+  if the mode is anything else then remove a choise by finding the first set in matrix
+  that has multiple values and sets it to the rest of the set ie. removes the first value from the set
+
+  implementation:
+  frist finds the position of the first set that has multiple element with `find-guess-pos`
+  and than using nested `for` functions maps the sets in `matrix` to its value
+  unless the set is at the previosly calculated position
+  in that case aplies the function dictaded by the `mode`"
+  ([matrix mode]
+   (if (= mode :make-guess)
+     (guess matrix #(list(first %)) (find-guess-pos matrix))
+     (guess matrix rest (find-guess-pos matrix))))
+  ([matrix mode pos]
+   (for [i (range 9)]
+     (if (= i (first pos))
+        (for [j (range 9)]
+           (if (= j (second pos))
+              (set(mode(nth (nth matrix i) j )))
+            (nth (nth matrix i) j)))
+      (nth matrix i)
+       )
+     )))
+
+
+
+;; solve
 (defn solve
-  "the main function
+  "this is the main function
     first transforms the input `matrix` with the `transform function`
   then recursively applies `single-value-solver` and `unique-value-solver` to `matrix`
   until `matrix` is solved
-  or until `matrix` is equal as `matrix` in the previous iteration this can happen for multiple reasons:
-    -the sudoku is unsolvable
-    -the sudoku contains multiple correct solutions
-    -the input was wrong
-    -the sudoku can't be solved using this algorithm it requires more advance logic
-        like to look at pairs or triples of cells within a row, column, or block"
+  or until `matix` is in ilegal state
+  or until `matrix` is equal as `matrix` in the previous iteration this means that the sudoku can't be solved just by
+  appling the 'solver' functions we need to make a guess and if we were wrong backtrace the result
+  so in this case we make a guess with `guess` function in `:make-guess` mode and continue to solve the SUDOKU
+  if we get `nil` as result then the guess was wrong so we remove the guess from the sets of options
+  with `guess` function in `:delete-guess` mode and continue to solve the SUDOKU"
   ([matrix] (do
               (println "input: SUDOKU")
               (clojure.pprint/print-table (range 9)matrix)
               (solve nil (transform matrix))))
   ([matrix_prev matrix]
    (cond
+    (ilegal-state? matrix) nil
     (solved? matrix) (do
                        (println "output: solved SUDOKU")
                        (clojure.pprint/print-table (range 9) (inverse-transform matrix))
                        (println "") (println "") (println "")
                        (inverse-transform matrix))
-    (= matrix_prev matrix) matrix_prev
-    :else (solve matrix (unique-value-solver(single-value-solver matrix))))))
+    (= matrix_prev matrix)
+       (or (solve matrix (guess matrix :make-guess))
+                (solve matrix (guess matrix :delete-guess)))
+    :else (recur matrix (unique-value-solver(single-value-solver matrix))))))
