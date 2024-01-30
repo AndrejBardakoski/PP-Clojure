@@ -276,9 +276,16 @@
     -the input was wrong
     -the sudoku can't be solved using this algorithm it requires more advance logic
         like to look at pairs or triples of cells within a row, column, or block"
-  ([matrix] (solve nil (transform matrix)))
+  ([matrix] (do
+              (println "input: SUDOKU")
+              (clojure.pprint/print-table (range 9)matrix)
+              (solve nil (transform matrix))))
   ([matrix_prev matrix]
    (cond
-    (solved? matrix) (inverse-transform matrix)
-    (= matrix_prev matrix) matrix_prev      ;;"unsolvable"
+    (solved? matrix) (do
+                       (println "output: solved SUDOKU")
+                       (clojure.pprint/print-table (range 9) (inverse-transform matrix))
+                       (println "") (println "") (println "")
+                       (inverse-transform matrix))
+    (= matrix_prev matrix) matrix_prev
     :else (solve matrix (unique-value-solver(single-value-solver matrix))))))
