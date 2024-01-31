@@ -123,6 +123,4 @@
     :else (higher-kicker? (kickers hand1)(kickers hand2))))
 
 ;; (winning-hand & hands)
-(defn winning-hand [& hands]
-  (reduce #(if (beats? %1 %2) %1 %2) hands)
-  )
+(defn winning-Hand [& hands] (reduce #(if (beats? %1 %2) %1 %2) hands))
