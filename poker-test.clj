@@ -102,13 +102,13 @@
   (is (= false (beats? low-ace-straight-flush-hand straight-flush-hand))))
 
 ;;15 winning-hand
-(deftest test15-winning-Hand
-  (is (= high-ace (winning-Hand high-ace)))
-  (is (= two-pairs-hand (winning-Hand high-ace two-pairs-hand)))
-  (is (= low-ace-straight-hand (winning-Hand high-ace low-ace-straight-hand two-pairs-hand)))
-  (is (= flush-hand(winning-Hand
+(deftest test15-winning-hand
+  (is (= high-ace (winning-hand high-ace)))
+  (is (= two-pairs-hand (winning-hand high-ace two-pairs-hand)))
+  (is (= low-ace-straight-hand (winning-hand high-ace low-ace-straight-hand two-pairs-hand)))
+  (is (= flush-hand(winning-hand
                      high-ace low-ace-straight-hand two-pairs-hand flush-hand)))
-  (is (= four-of-a-kind-hand (winning-Hand
+  (is (= four-of-a-kind-hand (winning-hand
                                four-of-a-kind-hand high-ace low-ace-straight-hand two-pairs-hand flush-hand))))
 
 (run-tests)
