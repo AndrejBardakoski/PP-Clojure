@@ -1,71 +1,37 @@
 ;; #SUDOKU
 
 ;; ##transform
-(defn transform-row
-  "helper function for `transform`
-  transforms the input vector into vector of sets
-
-  for each element in `row`
-  if the element is `0` map it into set of all numbers 1-9
-  else map the element into set of it self example `3->#{3}`"
-  [row]
-  (cond
-    (empty? row) []
-    (= 0 (first row)) (vec (cons (set (range 1 10)) (transform-row (rest row))))
-    :else (vec (cons (set(list(first row))) (transform-row (rest row))))))
-
 (defn transform
   "transfroms `matrix` into matrix of sets
 
-  for each row apply
-  the helper function `transform-row`"
+  implementation:
+  for each element in each row
+  if the element is `0` map it into set of all numbers 1-9
+  else map the element into set of it self example `3->#{3}`"
   [matrix]
   (cond
     (empty? matrix) []
-    :else (vec (cons (transform-row (first matrix))(transform (rest matrix))))))
-
+    :else (vec (cons (map #(if (= 0 %) (set (range 1 10)) (set(list %))) (first matrix))(transform (rest matrix))))))
 
 ;; ##inverse transform
-(defn invers-trans-row
-  "helper function for `inverse-transform`
-  transforms the input vector of sets into vector
-
-  maps each element in `row` by extracting the first and only element in the set"
-  [row]
-  (cond
-    (empty? row) []
-    :else (vec (cons (first(first row))(invers-trans-row (rest row))))))
-
 (defn inverse-transform
   "transfroms the solved matrix of sets into matrix
 
-  for each row apply
-  the helper function `inverse-trans-row`"
+  implementation:
+  map each element in each row by extracting the first and only element in the set"
   [matrix]
   (cond
     (empty? matrix) []
-    :else (vec (cons (invers-trans-row (first matrix))(inverse-transform (rest matrix))))))
+    :else (vec (cons (vec (map first (first matrix)))(inverse-transform (rest matrix))))))
 
 
 ;; ##solved?
-(defn solved-row?
-  "helper function for `solved?`
-  return true if each set in row has only 1 value,ie the row is solved "
-  [row]
-  (cond
-    (empty? row) true
-    (= 1 (count (first row))) (solved-row? (rest row))
-    :else false))
-
 (defn solved?
-  "return true if each set in each column has only 1 value,ie the matrix is solved
-  for each row apply
-  the helper function `solved-row?`
-  "
+  "return true if each set in each row has only 1 value,ie the matrix is solved"
   [matrix]
   (cond
     (empty? matrix) true
-    (solved-row? (first matrix)) (solved? (rest matrix))
+    (every? #(= 1 (count %)) (first matrix)) (solved? (rest matrix))
     :else false))
 
 
@@ -114,27 +80,15 @@
 
 
 ;; ###single-value-solver-vertical
-(defn get-nth-column
-  "returns the `n`-th column of the `matrix`
-
-  implementation:
-  take nth element from each row"
-  [matrix n]
-  (cond
-    (empty? matrix) ()
-    :else (cons (nth (first matrix) n)(get-nth-column (rest matrix) n))))
-
+;; transpose
 (defn transpose
   "returns a transpose matrix of `matrix`
 
   implementation:
-  iterate for the length of the matrix
-  and in each iteration add the n-th column to an aggregator"
-  ([matrix] (reverse(transpose matrix [] 0)))
-  ([matrix agr i]
-   (cond
-     (= (count matrix) i) agr
-     :else (transpose matrix (cons (get-nth-column matrix i) agr) (inc i)))))
+  using `for` to iterete through the lenght of the rows in `matrix`
+  in each iteration get the n-th column of `matrix`"
+  [matrix]
+  (for [n (range (count (first matrix)))] (map #(nth % n) matrix)))
 
 (defn svs-vertical
   "single value solver vertical
@@ -197,8 +151,7 @@
 (defn uvs-horizontal-row
   "helper function for `uvs-horizontal`
   if in the `row` there is a value that is present in only single set then
-  changes the set to contain only that value and
-  removes the value from all other sets in the `row`
+  changes the set to contain only that value
 
   implementation:
   iterate for each number in range [1-9]
@@ -222,8 +175,7 @@
 (defn uvs-horizontal
     "unique value solver horizontal
   if in the `matrix` there is a value that is present in only single set in the same row
-  then changes the set to contain only that value and
-  removes the value from all other sets in the row
+  then changes the set to contain only that value
 
   implementation:
   for each row apply
@@ -237,8 +189,7 @@
 (defn uvs-vertical
   "unique value solver vertical
   if in the `matrix` there is a value that is present in only single set in the same column
-  then changes the set to contain only that value and
-  removes the value from all other sets in the same column
+  then changes the set to contain only that value
 
   implementation:
     transponierte the matrix then apply `uvs-horizontal` then transponierte back the matrix"
@@ -249,8 +200,7 @@
 (defn uvs-box
   "unique value solver box
   if in the `matrix` there is a value that is present in only single set in the same box
-  then changes the set to contain only that value and
-  removes the value from all other sets in the same box - 3x3 field
+  then changes the set to contain only that value
 
   implementation:
   box-transform the matrix then apply `uvs-horizontal` then box-transform back the matrix"
@@ -325,9 +275,7 @@ implementation:
   (or
     (ilgl-sts-horizontal? matrix)
     (ilgl-sts-vertical? matrix)
-    (ilgl-sts-box? matrix)
-    )
-  )
+    (ilgl-sts-box? matrix)))
 
 
 ;; guessing
@@ -387,7 +335,7 @@ implementation:
   with `guess` function in `:delete-guess` mode and continue to solve the SUDOKU"
   ([matrix] (do
               (println "input: SUDOKU")
-              (clojure.pprint/print-table (range 9)matrix)
+              (clojure.pprint/print-table (range 9) (vec matrix))
               (solve nil (transform matrix))))
   ([matrix_prev matrix]
    (cond

@@ -2,16 +2,6 @@
 
 
 ;; transform
-;; transform-row
-(deftest test-transform-row
-  (is (= [] (transform-row [])))
-  (is (= [#{1}] (transform-row [1])))
-  (is (= [#{7}] (transform-row [7])))
-  (is (= [#{1 2 3 4 5 6 7 8 9}] (transform-row [0])))
-  (is (= [#{1} #{5} #{6}] (transform-row [1 5 6])))
-  (is (= [#{1} #{1 2 3 4 5 6 7 8 9} #{5} #{1 2 3 4 5 6 7 8 9} #{6}] (transform-row [1 0 5 0 6])))
-  )
-
 ;; transform
 (deftest test-transform
   (is (= [] (transform [])))
@@ -43,14 +33,6 @@
 
 
 ;; ##inverse transform
-;; invers-trans-row
-(deftest test-invers-trans-row
-  (is (= [] (invers-trans-row ())))
-  (is (= [1] (invers-trans-row [#{1}])))
-  (is (= [7] (invers-trans-row [#{7}] )))
-  (is (= [1 5 6] (invers-trans-row [#{1} #{5} #{6}])))
-  (is (= [1 4 5 7 6] (invers-trans-row [#{1} #{4} #{5} #{7} #{6}] ))))
-
 ;; inverse-transform
 (deftest test-inverse-transform
   (is (= [] (inverse-transform [])))
@@ -61,13 +43,6 @@
 
 
 ;; ##solved?
-;; solved-row?
-(deftest test-solved-row?
-  (is (= true (solved-row? [])))
-  (is (= true (solved-row? [#{1}] )))
-  (is (= false (solved-row? [#{5 2}])))
-  (is (= false (solved-row? [#{5} #{5} #{1 2} #{3}]))))
-
 ;; solved?
 (deftest test-solved?
   (is (= true (solved? [])))
@@ -75,6 +50,14 @@
   (is (= false (solved? [[#{5} #{3 4}]])))
   (is (= true (solved? [[#{1} #{5} #{6}][#{3} #{2} #{3}][#{1} #{1} #{2}]])))
   (is (= false (solved? [[#{1} #{5} #{6}][#{3} #{2} #{3}][#{1} #{1 4} #{2}]]))))
+
+;; transpose
+(deftest test-transpose
+  (is (= '((1)) (transpose '((1)))))
+  (is (= '((1)(2)(3)(4)) (transpose '((1 2 3 4)))))
+  (is (= '((1 2 3)(1 2 3)) (transpose '((1 1)(2 2)(3 3)))))
+  (is (= '((1 4 7)(2 5 8)(3 6 9)) (transpose '((1 2 3)(4 5 6)(7 8 9))))))
+
 
 ;; solve
 (deftest test-solve
